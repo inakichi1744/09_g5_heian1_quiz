@@ -595,11 +595,23 @@ const ALL_QUESTIONS = [
     explanation:'土佐日記（とさにっき）は紀貫之（きのつらゆき）が書きました。枕草子は清少納言、源氏物語は紫式部、古今和歌集は紀貫之らの編さんです。【受験ポイント】古今和歌集は醍醐天皇の命令でつくられた、最初の勅撰和歌集（天皇の命令でつくる和歌集）です。', exp:10 },
 ];
 
+// 前の問題の答えが次の問題文に出てくる問題などは、まとめて決まった順番で出す（まとまり同士・その他はランダム）
+const ORDER_GROUPS = [[3, 4, 2], [5, 6], [7, 8, 16, 9, 10, 17], [11, 12, 15], [13, 14, 18, 24], [20, 26], [27, 28], [29, 30, 31, 32, 33], [21, 36]];
+function orderQuestions(list){
+  const byId={}; list.forEach(q=>byId[q.id]=q);
+  const used=new Set(); const units=[];
+  ORDER_GROUPS.forEach(g=>{const u=g.map(id=>byId[id]).filter(Boolean); u.forEach(q=>used.add(q.id)); if(u.length) units.push(u);});
+  list.forEach(q=>{ if(!used.has(q.id)) units.push([q]); });
+  for(let i=units.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [units[i],units[j]]=[units[j],units[i]];}
+  return units.flat();
+}
+
+
 let questions=[], currentIndex=0, correctCount=0, wrongCount=0, answered=false, results=[];
 
 function startQuiz(questionSet){
   const isReview=!!questionSet;
-  questions=questionSet||[...ALL_QUESTIONS].sort(()=>Math.random()-0.5);
+  questions=questionSet||orderQuestions(ALL_QUESTIONS);
   currentIndex=0; correctCount=0; wrongCount=0; results=[]; answered=false; exp=0;
   if(!isReview) earnedTitles=[];
   document.getElementById('intro-screen').style.display='none';
